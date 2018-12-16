@@ -4,6 +4,9 @@ import torch
 
 from collections import deque
 from agent import Agent
+from model import Actor, Critic
+from tensorboard import Tensorboard
+from datetime import datetime
 
 # import matplotlib.pyplot as plt
 
@@ -12,6 +15,9 @@ brain_name = env.brain_names[0]
 env_info = env.reset(train_mode=True)[brain_name]
 brain = env.brains[brain_name]
 agent = Agent(state_size=env_info.vector_observations.shape[1], action_size=brain.vector_action_space_size, random_seed=10, agent_count=20)
+models = (Actor, Critic)
+tag = "run_1"
+tensorboard = Tensorboard(models, './logs/logs-{}-{}'.format(tag, datetime.now))
 
 
 # number of agents
@@ -29,7 +35,7 @@ print('There are {} agents. Each observes a state with length: {}'.format(states
 print('The state for the first agent looks like:', states[0])
 
 
-def ddpg(n_episodes=500, max_t=700):
+def ddpg(n_episodes=500):
     scores_deque = deque(maxlen=100)
     scores = []
     for i_episode in range(1, n_episodes + 1):
@@ -46,6 +52,9 @@ def ddpg(n_episodes=500, max_t=700):
             agent.step(state, action, reward, next_state, done)
             state = next_state
             score += np.array(reward)
+            tensorboard.add_scalar("{}-scores".format(tag), np.mean(score))
+            tensorboard.add_scalar("{}-actor".format(tag), agent.loss[0])
+            tensorboard.add_scalar("{}-critic".format(tag), agent.loss[1])
             if np.any(done):
                 break
         scores_deque.append(score)
@@ -67,9 +76,3 @@ def ddpg(n_episodes=500, max_t=700):
 
 scores = ddpg()
 
-# fig = plt.figure()
-# ax = fig.add_subplot(111)
-# plt.plot(np.arange(1, len(scores) + 1), scores)
-# plt.ylabel('Score')
-# plt.xlabel('Episode #')
-# plt.show()
