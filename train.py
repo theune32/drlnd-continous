@@ -52,20 +52,24 @@ def ddpg(n_episodes=500):
             agent.step(state, action, reward, next_state, done)
             state = next_state
             score += np.array(reward)
-            tensorboard.add_scalar("{}-scores".format(tag), np.mean(score))
+
             tensorboard.add_scalar("{}-actor".format(tag), agent.loss[0])
             tensorboard.add_scalar("{}-critic".format(tag), agent.loss[1])
             if np.any(done):
                 break
-        scores_deque.append(score)
         scores.append(score)
-        print('\rEpisode {}\tAverage Score: {}\tScore: {}'.format(i_episode, np.mean(scores_deque), np.mean(score)),
+        scores_deque.append(score)
+        ep_mean_score = np.mean(score)
+        hundred_ep_average = np.mean(scores_deque)
+        tensorboard.add_scalar("{}-mean-scores".format(tag), ep_mean_score)
+        tensorboard.add_scalar("{}-100-ep-scores".format(tag), hundred_ep_average)
+        print('\rEpisode {}\tAverage Score: {}\tScore: {}'.format(i_episode, hundred_ep_average, ep_mean_score),
               end="")
-        if i_episode % 100 == 0 or np.mean(scores_deque) > 30:
+        if i_episode % 100 == 0 or hundred_ep_average > 30:
             torch.save(agent.actor_local.state_dict(), 'checkpoint_actor-{}.pth'.format(i_episode))
             torch.save(agent.critic_local.state_dict(), 'checkpoint_critic-{}.pth'.format(i_episode))
-            print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, np.mean(scores_deque)))
-        if np.mean(scores_deque) > 30:
+            print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, hundred_ep_average))
+        if hundred_ep_average > 30:
             torch.save(agent.actor_local.state_dict(), 'checkpoint_actor_30+-{}.pth'.format(i_episode))
             torch.save(agent.critic_local.state_dict(), 'checkpoint_critic_30+-{}.pth'.format(i_episode))
             np.save("scores_30+-{}".format(i_episode), scores)
