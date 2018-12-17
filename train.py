@@ -17,7 +17,7 @@ brain = env.brains[brain_name]
 agent = Agent(state_size=env_info.vector_observations.shape[1], action_size=brain.vector_action_space_size, random_seed=10, agent_count=20)
 models = (Actor, Critic)
 tag = "run_1"
-tensorboard = Tensorboard(models, './logs/logs-{}-{}'.format(tag, datetime.now))
+tensorboard = Tensorboard(models, './logs/logs-{}-{}'.format(tag, datetime.now()))
 
 
 # number of agents
