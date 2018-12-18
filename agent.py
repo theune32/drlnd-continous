@@ -39,6 +39,8 @@ class Agent:
         self.critic_target = Critic(state_size, action_size, random_seed).to(device)
         self.critic_optimizer = optim.Adam(self.critic_local.parameters(), lr=LR_CRITIC, weight_decay=WEIGHT_DECAY)
 
+        self.loss = [0., 0.]
+
         self.noise = OUNoise((self.agent_count, self.action_size))
 
         self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, random_seed)
@@ -103,6 +105,7 @@ class Agent:
         self.actor_optimizer.step()
 
         # ---------- update target network ---------- #
+        self.loss = [actor_loss.item(), critic_loss.item()]
         self.soft_update(self.critic_local, self.critic_target, TAU)
         self.soft_update(self.actor_local, self.actor_target, TAU)
 
